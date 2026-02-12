@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reactive Chemical Render Engine</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; color: white; font-family: sans-serif; overflow: hidden; }
+        
+        /* The container determines where the reaction happens */
+        #reaction-container {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; /* Background mode */
+        }
+        
+        .ui { position: relative; padding: 50px; z-index: 10; pointer-events: none; }
+        button { pointer-events: auto; padding: 15px 30px; background: transparent; border: 2px solid white; color: white; cursor: pointer; font-size: 1.2rem; margin-right: 10px; transition: 0.3s; }
+        button:hover { background: white; color: black; }
+    </style>
+</head>
+<body>
+
+    <!-- Integration Container -->
+    <div id="reaction-container"></div>
+
+    <div class="ui">
+        <h1>ALCHEMY ENGINE v1.0</h1>
+        <p>Choose reactants to inject into the core.</p>
+        <!-- User Controls -->
+        <button onclick="mixFire()">🔥 Inject Volatile</button>
+        <button onclick="mixAcid()">🧪 Inject Acid</button>
+        <button onclick="stabilize()">💧 Stabilize</button>
+    </div>
+
+    <!-- Import Libraries (Three.js via CDN for example) -->
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        import AlchemyEngine from './AlchemyEngine.js';
+
+        // 1. Initialize the Render Server/Engine
+        const engine = new AlchemyEngine('reaction-container');
+
+        // 2. Define Chemical Presets
+        window.mixFire = () => {
+            // High amount, orange color, High turbulence
+            console.log("Injecting Fuel...");
+            engine.injectChemical('#ff5500', 1.0, 2.5); 
+        };
+
+        window.mixAcid = () => {
+            // Medium amount, bright green, weird turbulence
+            console.log("Injecting Corrosive Agent...");
+            engine.injectChemical('#39ff14', 0.8, 1.2); 
+        };
+
+        window.stabilize = () => {
+            console.log("Flushing system...");
+            engine.injectChemical('#0022ff', 0.0, 0.1);
+        };
+    </script>
+</body>
+</html>

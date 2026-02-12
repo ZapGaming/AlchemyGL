@@ -1,12 +1,15 @@
 {
-  "name": "prometheus-logic-core",
-  "version": "1.0.0",
+  "name": "aether-chem-engine",
+  "version": "2.0.0",
+  "description": "GPU Chemical Reaction Engine & Documentation Host",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "body-parser": "^1.20.2"
+    "body-parser": "^1.20.2",
+    "color": "^4.2.3"
   }
 }

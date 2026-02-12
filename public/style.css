@@ -1,19 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    --prim: #00f3ff;   /* Cyan */
+    --sec: #7000ff;    /* Purple */
+    --warn: #ff0055;   /* Red/Pink */
+    --bg: #050505;     /* Dark */
+    --glass: rgba(12, 12, 12, 0.75);
+    --border: 1px solid rgba(255,255,255,0.15);
+}
 
 body {
-    margin: 0; background-color: #000;
+    margin: 0; 
+    background-color: var(--bg);
+    color: white; 
     font-family: 'Rajdhani', sans-serif;
-    color: white; overflow: hidden; height: 100vh;
-    transition: filter 0.1s; /* Instant invert support */
+    overflow: hidden; height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    transition: filter 0.1s linear;
 }
 
-/* REALITY BREAK CLASS (Toggled by JS) */
+/* --- THE REALITY BREAK EFFECT --- */
 body.reality-break {
-    filter: invert(1) hue-rotate(180deg);
+    filter: invert(1) hue-rotate(180deg) contrast(1.2);
 }
 body.reality-break canvas {
-    /* Optional: keep canvas normal if desired, or invert all */
-    /* filter: invert(1); */
+    /* Optional: Prevents canvas from double-inverting if needed, 
+       but for Entropy chaos, inverting everything is cooler */
 }
 
 /* BACKGROUND CANVAS */
@@ -22,59 +34,130 @@ body.reality-break canvas {
     z-index: 0;
 }
 
-/* GLASS UI */
-.glass-container {
-    position: absolute; left: 50%; top: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    background: rgba(10, 10, 10, 0.4);
-    backdrop-filter: blur(25px) saturate(180%);
-    -webkit-backdrop-filter: blur(25px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    display: flex; flex-direction: column; gap: 20px;
+/* MAIN CONTAINER (The Terminal) */
+.terminal-container {
+    position: relative; z-index: 10;
+    width: 800px; max-width: 90%;
+    min-height: 500px;
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px);
+    border: var(--border);
+    border-radius: 12px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    display: flex; flex-direction: column;
+    overflow: hidden;
 }
 
-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 10px; }
-.brand { font-size: 2.5rem; font-weight: 700; letter-spacing: 2px; }
-.brand span { color: #00E5FF; }
-.subtitle { color: #666; letter-spacing: 3px; font-size: 0.8rem; }
-
-/* CONTROLS GRID */
-.controls-area { display: flex; align-items: center; justify-content: space-between; }
-.chamber { width: 45%; }
-.separator { font-size: 2rem; opacity: 0.5; }
-.label { font-size: 0.7rem; color: #aaa; margin-bottom: 5px; }
-
-/* INPUTS */
-select {
-    width: 100%; padding: 10px;
-    background: rgba(0,0,0,0.5); border: 1px solid #444; color: #fff;
-    font-family: 'Rajdhani'; font-size: 1.1rem; border-radius: 5px;
-    margin-bottom: 15px; outline: none; cursor: pointer;
+/* HEADER */
+header {
+    padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: var(--border);
+    background: rgba(0,0,0,0.2);
 }
+.brand { font-size: 1.8rem; font-weight: 700; letter-spacing: 2px; }
+.version { color: var(--prim); font-size: 0.8rem; vertical-align: super; margin-left: 5px; }
+.status-indicator { font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #888; }
+.dot { display: inline-block; width: 6px; height: 6px; background: #0f0; border-radius: 50%; margin-right: 5px; box-shadow: 0 0 5px #0f0;}
 
-/* SLIDERS */
-.mass-control { display: flex; flex-direction: column; font-size: 0.9rem; }
-input[type=range] { width: 100%; accent-color: #00E5FF; }
-
-/* IGNITION BUTTON */
-button {
-    width: 100%; padding: 20px;
-    background: linear-gradient(90deg, #00E5FF, #0055FF);
-    border: none; color: #fff; font-size: 1.2rem;
-    font-weight: 800; letter-spacing: 2px;
-    cursor: pointer; border-radius: 5px;
+/* NAVIGATION */
+nav.tabs {
+    display: flex; background: rgba(255,255,255,0.03);
+}
+.tab-btn {
+    flex: 1;
+    background: transparent; border: none; outline: none;
+    color: #888; padding: 15px; font-family: 'Rajdhani';
+    font-weight: 700; font-size: 0.9rem; letter-spacing: 1px;
+    cursor: pointer; border-bottom: 2px solid transparent;
     transition: 0.3s;
 }
-button:hover { box-shadow: 0 0 30px #00E5FF; }
+.tab-btn:hover { color: white; background: rgba(255,255,255,0.05); }
+.tab-btn.active { color: var(--prim); border-bottom: 2px solid var(--prim); background: rgba(0, 243, 255, 0.05); }
 
-/* CONSOLE */
-.console {
-    background: #000; border-left: 4px solid #00E5FF;
-    padding: 15px; font-family: monospace; font-size: 0.9rem;
+/* CONTENT AREA */
+.tab-content { padding: 30px; display: none; /* JS Toggles this */ opacity: 0; animation: fadeIn 0.3s; }
+.tab-content.active { display: block; opacity: 1; }
+
+/* TAB: REACTOR GRID */
+.control-grid { display: flex; border: var(--border); border-radius: 6px; margin-bottom: 20px; }
+.chamber { width: 50%; padding: 20px; }
+.chamber-head { color: #555; font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; }
+
+/* CUSTOM SELECT */
+.element-select {
+    width: 100%; padding: 12px;
+    background: #111; border: 1px solid #444; color: white;
+    font-family: 'Rajdhani'; font-size: 1.1rem; border-radius: 4px;
+    margin-bottom: 20px; outline: none; cursor: pointer;
 }
-.docs-mini { text-align: center; font-size: 0.7rem; color: #555; margin-top: 10px; }
-code { background: #222; padding: 2px 5px; color: #ddd; }
+.element-select:focus { border-color: var(--prim); }
+optgroup { color: var(--prim); }
+option { color: white; background: #222; }
+
+/* SLIDER GROUPS */
+.slider-group label { display: block; font-size: 0.8rem; color: #aaa; margin-bottom: 5px; }
+.slider-group span { color: var(--prim); font-weight: bold; }
+input[type=range] { width: 100%; accent-color: var(--prim); margin: 10px 0; }
+.bar-visual { height: 4px; background: var(--prim); width: 50%; box-shadow: 0 0 10px var(--prim); transition: width 0.1s; }
+
+/* IGNITION BUTTON */
+#ignite-btn {
+    width: 100%; padding: 18px;
+    background: linear-gradient(135deg, var(--prim), #00aaff);
+    color: black; border: none; font-family: 'Rajdhani';
+    font-size: 1.2rem; font-weight: 800; letter-spacing: 3px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+    cursor: pointer; transition: transform 0.1s, filter 0.2s;
+}
+#ignite-btn:hover { filter: brightness(1.2); }
+#ignite-btn:active { transform: scale(0.98); }
+
+/* LOGS */
+.console-output {
+    margin-top: 20px; background: rgba(0,0,0,0.5); border-left: 3px solid var(--sec);
+    height: 100px; padding: 10px; font-family: 'JetBrains Mono'; font-size: 0.8rem;
+    overflow-y: auto; color: #ccc;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+/* TAB: RECIPES */
+.grid-recipes {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;
+    max-height: 350px; overflow-y: auto; padding-right: 5px;
+}
+.recipe-card {
+    background: rgba(255,255,255,0.03); border: var(--border); padding: 15px;
+    cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
+}
+.recipe-card:hover { border-color: var(--prim); background: rgba(0,243,255,0.05); }
+.rec-title { color: var(--prim); font-weight: 700; margin-bottom: 5px; text-transform: uppercase;}
+.rec-desc { font-size: 0.8rem; color: #888; }
+
+/* TAB: API DOCS */
+.code-box {
+    background: #111; padding: 15px; border-radius: 4px;
+    font-family: 'JetBrains Mono'; display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+}
+.method { color: var(--sec); font-weight: bold; }
+.url { font-size: 0.8rem; color: #ccc; }
+pre {
+    background: #151515; padding: 15px; border-left: 2px solid var(--warn);
+    color: #aaa; font-size: 0.8rem; overflow-x: auto;
+    font-family: 'JetBrains Mono';
+}
+
+/* FOOTER ALERT */
+.footer-alert {
+    position: absolute; bottom: 10px; right: 10px;
+    font-family: 'JetBrains Mono'; font-size: 4rem; 
+    opacity: 0.1; font-weight: 700; pointer-events: none; z-index: -1;
+    color: white; white-space: nowrap;
+}
+.footer-alert.critical {
+    color: red; opacity: 0.8; animation: pulse 0.5s infinite alternate; z-index: 100;
+}
+
+@keyframes pulse { from { opacity: 0.5; } to { opacity: 1.0; text-shadow: 0 0 30px red; } }

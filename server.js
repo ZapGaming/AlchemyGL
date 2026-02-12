@@ -1,4 +1,4 @@
-/* server.js - ENTROPY ENGINE LOGIC CORE */
+/* server.js - ENTROPY V6 LOGIC */
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -10,103 +10,89 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- THE GRAND ARCHIVE (70+ Elements) ---
+// --- GRAND ARCHIVE EXPANDED ---
 const DB = {
-    // TIER 1: EARTHLY
-    'H2O': { name: 'Water', h: 0.1, v: 0.5, r: 0.0, color: '#2196F3', type: 'LIQ' },
-    'DIRT': { name: 'Earth/Soil', h: 0.0, v: 5.0, r: 0.0, color: '#5D4037', type: 'SOL' },
-    'SAND': { name: 'Silica Sand', h: 0.1, v: 4.5, r: 0.0, color: '#FFECB3', type: 'SOL' },
-    'OIL': { name: 'Crude Oil', h: 0.4, v: 2.0, r: 0.0, color: '#0D0D0D', type: 'LIQ' },
-    'GOLD': { name: 'Molten Gold', h: 0.6, v: 3.0, r: 0.0, color: '#FFD700', type: 'MET' },
-    'MERC': { name: 'Mercury', h: 0.2, v: 1.5, r: 0.1, color: '#CFD8DC', type: 'MET' },
-    
-    // TIER 2: VOLATILE
-    'FIRE': { name: 'Liquid Fire', h: 3.0, v: 0.1, r: 0.0, color: '#FF3D00', type: 'PLASMA' },
-    'LAVA': { name: 'Magma', h: 5.0, v: 8.0, r: 0.2, color: '#BF360C', type: 'LIQ' },
-    'NITRO':{ name: 'Nitroglycerin', h: 4.0, v: 0.8, r: 0.0, color: '#FFF9C4', type: 'EXP' },
-    'CH4':  { name: 'Methane', h: 2.5, v: 0.05, r: 0.0, color: '#00E5FF', type: 'GAS' },
-    'ACID': { name: 'Fluoroantimonic Acid', h: 2.0, v: 1.2, r: 0.5, color: '#76FF03', type: 'ACID' },
+    // TIER 0: BASES
+    'H2O': { name: 'Water', h: 0.1, v: 1.0, type: 0 },
+    'DIRT': { name: 'Soil', h: 0.0, v: 5.0, type: 0 },
+    'O2':   { name: 'Liquid Oxygen', h: -2.0, v: 0.1, type: 1 },
 
-    // TIER 3: COSMIC / SCI-FI
-    'U235': { name: 'Uranium 235', h: 6.0, v: 5.0, r: 8.0, color: '#69F0AE', type: 'RAD' },
-    'COR':  { name: 'Demon Core', h: 8.0, v: 9.0, r: 20.0, color: '#00C853', type: 'RAD' },
-    'VOID': { name: 'Void Essence', h: -10.0, v: 0.0, r: 50.0, color: '#000000', type: 'EXO' },
-    'ANTI': { name: 'Antimatter', h: 99.0, v: 0.0, r: 99.0, color: '#FFFFFF', type: 'EXO' },
-    'STR':  { name: 'Stardust', h: 10.0, v: 0.2, r: 5.0, color: '#E040FB', type: 'PLASMA' }
+    // TIER 1: FUELS
+    'CH4':  { name: 'Methane', h: 3.0, v: 0.1, type: 1, color: '#00E5FF' },
+    'FIRE': { name: 'Plasma', h: 8.0, v: 0.0, type: 1, color: '#FF3D00' },
+    'NITRO':{ name: 'C4 Explosive', h: 5.0, v: 5.0, type: 2, color: '#FFF9C4' },
+
+    // TIER 2: EXOTIC
+    'U235': { name: 'Uranium', h: 20.0, v: 5.0, type: 3, color: '#00FF00', rads: 10 },
+    'ANTI': { name: 'Antimatter', h: 100.0, v: 0.0, type: 4, color: '#FFFFFF', rads: 100 },
+    'VOID': { name: 'Dark Energy', h: -50.0, v: 0.0, type: 5, color: '#0a000a', rads: 50 },
+    'GRAV': { name: 'Singularity', h: 1000.0, v: 100.0, type: 5, color: '#000000', rads: 500 }
 };
 
-// --- PHYSICS ENGINE ---
 app.post('/api/mix', (req, res) => {
     try {
         const { idA, massA, idB, massB } = req.body;
+        const A = DB[idA] || DB['H2O'];
+        const B = DB[idB] || DB['H2O'];
+
+        // Physics mixing
+        const rB = massB / (parseFloat(massA) + parseFloat(massB));
         
-        const mA = parseFloat(massA);
-        const mB = parseFloat(massB);
-        const totalMass = mA + mB;
+        let physics = {
+            heat: (A.h * (1-rB)) + (B.h * rB),
+            viscosity: (A.v * (1-rB)) + (B.v * rB),
+            radiation: (A.rads || 0) + (B.rads || 0),
+            color: Color(A.color || '#fff').mix(Color(B.color || '#fff'), rB).hex(),
+            force: 0,      // Explosion force (for Particles)
+            particles: 0,  // Number of particles
+            shake: 0,      // Screen Shake
+            invert: false,
+            event: "STABLE"
+        };
 
-        // Ratio Weights
-        const rA = mA / totalMass;
-        const rB = mB / totalMass;
+        // --- COMPLEX INTERACTIONS ---
 
-        const elA = DB[idA] || DB['H2O'];
-        const elB = DB[idB] || DB['H2O'];
-
-        // 1. CALCULATE WEIGHTED PROPERTIES
-        let heat = (elA.h * rA) + (elB.h * rB);
-        let visc = (elA.v * rA) + (elB.v * rB);
-        let rads = (elA.r * rA) + (elB.r * rB); // Radiation averages out usually
-        let colA = Color(elA.color);
-        let colB = Color(elB.color);
-        let finalColor = colA.mix(colB, rB).hex();
-
-        // 2. CHEMICAL EVENTS SYSTEM
-        let event = "STABLE";
-        let chaosLevel = 0; // 0-100 scales graphics
-        let siteInvert = false;
-
-        // EVENT: Water Extinguishes Fire/Lava
-        if ((idA === 'H2O' && ['LAVA', 'FIRE'].includes(idB)) || (idB === 'H2O' && ['LAVA', 'FIRE'].includes(idA))) {
-             if (rA > 0.6 || rB > 0.6) {
-                event = "OBSIDIAN COOLING";
-                heat = 1.0; visc = 10.0; finalColor = '#212121';
-             } else {
-                event = "STEAM EXPLOSION";
-                heat = 15.0; visc = 0.0; chaosLevel = 20; finalColor = '#ECEFF1';
-             }
-        }
-
-        // EVENT: Matter-Antimatter Annihilation
+        // 1. ANTIMATTER ANNIHILATION
         if (idA === 'ANTI' || idB === 'ANTI') {
-             event = "VACUUM COLLAPSE";
-             heat = 1000.0; 
-             chaosLevel = 100;
-             rads = 100;
-             siteInvert = true; // TRIGGERS HTML COLOR SWAP
-             finalColor = '#FFFFFF';
+            physics.event = "MATTER DELETION";
+            physics.force = 50.0; 
+            physics.particles = 2000;
+            physics.heat = 500;
+            physics.invert = true;
+            physics.shake = 50;
         }
 
-        // EVENT: Nuclear Meltdown
-        if (rads > 8.0 && heat > 5.0) {
-            event = "CRITICAL EXCURSION";
-            chaosLevel = rads * 2;
-            finalColor = '#00FF00'; // Matrix Green
-            if (rads > 15) siteInvert = Math.random() > 0.5; // Flicker
+        // 2. BLACK HOLE CREATION (Void + Heavy Mass)
+        if ((idA === 'VOID' && B.h > 10) || (idB === 'VOID' && A.h > 10)) {
+            physics.event = "GRAVITATIONAL COLLAPSE";
+            physics.force = -20.0; // Implosion (negative force)
+            physics.particles = 500;
+            physics.color = '#000000';
+            physics.shake = 20;
         }
 
-        res.json({
-            meta: { event },
-            physics: {
-                color: finalColor,
-                heat: heat,              // Controls Bloom + Turbulence Speed
-                viscosity: visc,         // Controls Fluid noise scale
-                radiation: rads,         // Controls Chromatic Aberration / Glitch
-                chaos: chaosLevel,       // Controls Screen Shake amount
-                invert: siteInvert       // Controls CSS Inversion
-            }
-        });
+        // 3. EXPLOSION (Fire + Oxygen/Nitro)
+        if ((idA === 'NITRO' && B.type === 1) || (idB === 'NITRO' && A.type === 1)) {
+            physics.event = "DETONATION";
+            physics.force = 15.0;
+            physics.particles = 300;
+            physics.heat = 50;
+            physics.color = '#FFDD00';
+            physics.shake = 5;
+        }
 
-    } catch(e) { console.log(e); res.status(500).json({}); }
+        // 4. NUCLEAR CRITICALITY
+        if (physics.radiation > 15) {
+            physics.event = "CRITICAL RADIANT FLUX";
+            physics.particles = 50 * physics.radiation; // Radioactive dust
+            physics.force = 2.0;
+            physics.shake = 2 + (physics.radiation * 0.1);
+        }
+
+        res.json({ success: true, reaction: physics });
+
+    } catch(e) { console.error(e); res.status(500).json({error: "Reaction Failed"}); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`ENTROPY V5 LISTENING ${PORT}`));
+app.listen(PORT, () => console.log(`ENTROPY V6 SINGULARITY: PORT ${PORT}`));

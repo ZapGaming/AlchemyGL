@@ -2,11 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ENTROPY V5 | GLOBAL REALITY ENGINE</title>
+    <title>ENTROPY V6 | THE SINGULARITY</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- LIBRARIES -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
@@ -14,299 +11,149 @@
 </head>
 <body>
 
-    <!-- LAYER 1: THE WEBGL CANVAS (Background) -->
     <div id="hyper-canvas"></div>
+    
+    <!-- MOUSE INTERACTION HINT -->
+    <div id="pointer-hint">MOUSE ACTIVE</div>
 
-    <!-- LAYER 2: THE HOLOGRAPHIC TERMINAL -->
-    <main class="terminal-container">
-        
-        <!-- HEADER -->
-        <header>
-            <div class="brand">
-                ENTROPY<span class="version">V5.0</span>
+    <main class="holo-ui">
+        <div class="header">
+            <div class="title">ENTROPY<span>V6.0</span></div>
+            <div class="status">ENGINE: HYBRID (WebGL+PhysX)</div>
+        </div>
+
+        <div class="viewport-hud">
+            <!-- TAB NAV -->
+            <div class="tabs">
+                <button class="active" onclick="tab('MANUAL')">MANUAL CONTROL</button>
+                <button onclick="tab('PRESETS')">CATASTROPHES</button>
+                <button onclick="tab('GUIDE')">FIELD GUIDE</button>
             </div>
-            <div class="status-indicator">
-                <span class="dot"></span> HOST: RENDER.COM // ONLINE
-            </div>
-        </header>
 
-        <!-- NAVIGATION TABS -->
-        <nav class="tabs">
-            <button class="tab-btn active" onclick="openTab('reactor')">CORE REACTOR</button>
-            <button class="tab-btn" onclick="openTab('formulas')">KNOWN FORMULAS</button>
-            <button class="tab-btn" onclick="openTab('api')">DEVELOPER API</button>
-        </nav>
-
-        <!-- TAB CONTENT: REACTOR (MAIN) -->
-        <section id="reactor" class="tab-content active">
-            <div class="control-grid">
-                
-                <!-- CHAMBER A -->
-                <div class="chamber" style="border-right: 1px solid rgba(255,255,255,0.1);">
-                    <div class="chamber-head">CHAMBER A // INPUT</div>
-                    <select id="selA" class="element-select">
-                        <optgroup label="Primaries">
-                            <option value="H2O" selected>Water (H2O)</option>
-                            <option value="DIRT">Earth / Soil</option>
-                            <option value="SAND">Silica Sand</option>
-                            <option value="GOLD">Molten Gold</option>
-                        </optgroup>
-                        <optgroup label="Volatile">
-                            <option value="FIRE">Liquid Fire</option>
-                            <option value="NITRO">Nitroglycerin</option>
-                        </optgroup>
-                        <optgroup label="Exotic">
-                            <option value="VOID">Void Essence</option>
+            <!-- TAB: MANUAL -->
+            <div id="MANUAL" class="panel active">
+                <div class="row">
+                    <div class="col">
+                        <label>SOURCE A (Base)</label>
+                        <select id="A">
+                            <option value="H2O">Water</option>
+                            <option value="DIRT">Soil</option>
+                            <option value="CH4">Methane</option>
+                            <option value="VOID">Dark Energy</option>
                             <option value="ANTI">Antimatter</option>
-                            <option value="STR">Stardust</option>
-                        </optgroup>
-                    </select>
-                    <div class="slider-group">
-                        <label>MASS INJECTION: <span id="dispA">50</span>g</label>
-                        <input type="range" id="rangeA" min="0" max="100" value="50">
-                        <div class="bar-visual" id="barA"></div>
+                        </select>
+                        <input type="range" id="mA" value="50">
+                    </div>
+                    <div class="col">
+                        <label>SOURCE B (Catalyst)</label>
+                        <select id="B">
+                            <option value="FIRE">Plasma Fire</option>
+                            <option value="NITRO">Explosive (C4)</option>
+                            <option value="U235">Uranium Core</option>
+                            <option value="GRAV">Singularity</option>
+                            <option value="O2">Liquid Oxygen</option>
+                        </select>
+                        <input type="range" id="mB" value="50">
                     </div>
                 </div>
+                <button class="fire-btn" onclick="fire()">IGNITE SEQUENCE</button>
+            </div>
 
-                <!-- CHAMBER B -->
-                <div class="chamber">
-                    <div class="chamber-head">CHAMBER B // CATALYST</div>
-                    <select id="selB" class="element-select">
-                        <optgroup label="Primaries">
-                            <option value="LAVA" selected>Magma</option>
-                            <option value="MERC">Mercury</option>
-                            <option value="OIL">Crude Oil</option>
-                        </optgroup>
-                        <optgroup label="Volatile">
-                            <option value="CH4">Methane Gas</option>
-                            <option value="ACID">Super Acid</option>
-                        </optgroup>
-                        <optgroup label="Exotic">
-                            <option value="U235">Uranium 235</option>
-                            <option value="COR">Demon Core</option>
-                            <option value="ANTI">Antimatter</option>
-                        </optgroup>
-                    </select>
-                    <div class="slider-group">
-                        <label>MASS INJECTION: <span id="dispB">50</span>g</label>
-                        <input type="range" id="rangeB" min="0" max="100" value="50">
-                        <div class="bar-visual" id="barB"></div>
+            <!-- TAB: PRESETS -->
+            <div id="PRESETS" class="panel">
+                <div class="preset-grid">
+                    <div class="card" onclick="run('ANTI','ANTI')">
+                        <b>MATTER DELETION</b>
+                        <small>Antimatter + Antimatter</small>
+                    </div>
+                    <div class="card" onclick="run('NITRO','FIRE')">
+                        <b>THERMAL DETONATION</b>
+                        <small>C4 + Plasma</small>
+                    </div>
+                    <div class="card" onclick="run('VOID','GRAV')">
+                        <b>BLACK HOLE</b>
+                        <small>Dark Energy + Singularity</small>
                     </div>
                 </div>
             </div>
 
-            <!-- ACTION -->
-            <button id="ignite-btn">INITIATE REACTION SEQUENCE</button>
-            
-            <!-- READOUT -->
-            <div class="console-output">
-                <div id="log-feed">
-                    <div>> SYSTEM INITIALIZED...</div>
-                    <div>> WAITING FOR INPUT...</div>
+            <!-- TAB: GUIDE -->
+            <div id="GUIDE" class="panel">
+                <h3>INTERACTIVITY UPGRADE</h3>
+                <ul>
+                    <li><b>Move Mouse:</b> Interacts with fluid tension locally.</li>
+                    <li><b>Explosions:</b> V6 includes physical shrapnel debris.</li>
+                    <li><b>Events:</b> Reactions now trigger HTML layout shakes.</li>
+                </ul>
+                <div class="guide-box">
+                    API: <code>POST /api/mix</code><br>
+                    Engine: Three.js + Custom Physics Shader
                 </div>
             </div>
-        </section>
 
-        <!-- TAB CONTENT: FORMULAS -->
-        <section id="formulas" class="tab-content">
-            <h2>Quick-Load Formulas</h2>
-            <div class="grid-recipes">
-                <div class="recipe-card" onclick="loadRecipe('ANTI', 90, 'VOID', 90)">
-                    <div class="rec-title">Reality Collapse</div>
-                    <div class="rec-desc">Antimatter + Void (Massive Scale). Triggers global HTML inversion.</div>
-                </div>
-                <div class="recipe-card" onclick="loadRecipe('U235', 80, 'COR', 100)">
-                    <div class="rec-title">Demon Core Meltdown</div>
-                    <div class="rec-desc">High Radiation Logic. Triggers Green Glitch + Camera Shake.</div>
-                </div>
-                <div class="recipe-card" onclick="loadRecipe('H2O', 50, 'LAVA', 50)">
-                    <div class="rec-title">Obsidian Creation</div>
-                    <div class="rec-desc">Water + Lava (Balanced). Cooling effect event.</div>
-                </div>
-                <div class="recipe-card" onclick="loadRecipe('NITRO', 100, 'FIRE', 10)">
-                    <div class="rec-title">Hyper Combustion</div>
-                    <div class="rec-desc">Nitroglycerin + Liquid Fire. Max Chaos variable.</div>
-                </div>
-                <div class="recipe-card" onclick="loadRecipe('STR', 50, 'GOLD', 50)">
-                    <div class="rec-title">Cosmic Alchemy</div>
-                    <div class="rec-desc">Stardust + Gold. Rare Element transmutation.</div>
-                </div>
-                <div class="recipe-card" onclick="loadRecipe('ACID', 60, 'MERC', 40)">
-                    <div class="rec-title">Toxic Sludge</div>
-                    <div class="rec-desc">Super Acid + Mercury. High Viscosity fluid simulation.</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB CONTENT: API DOCS -->
-        <section id="api" class="tab-content">
-            <h2>Developer API Reference</h2>
-            <p>You can connect your own frontend to our ENTROPY Hivemind.</p>
-
-            <div class="code-box">
-                <div class="method">POST</div>
-                <div class="url">https://entropy-v5.onrender.com/api/mix</div>
-            </div>
-
-            <h3>Request Body</h3>
-            <pre>
-{
-    "idA": "ANTI",    // Element ID String
-    "massA": 95.5,    // Float (0-100)
-    "idB": "VOID",    
-    "massB": 50.0
-}</pre>
-
-            <h3>Response Object</h3>
-            <pre>
-{
-    "meta": { "event": "VACUUM COLLAPSE" },
-    "physics": {
-        "color": "#FFFFFF",
-        "heat": 1000.0,      // Determines Bloom
-        "viscosity": 0.0,    // Determines Noise Scale
-        "chaos": 100,        // Shake Amount
-        "invert": true       // HTML Invert Flag
-    }
-}</pre>
-        </section>
-
+            <div class="logs" id="logs">>> SYSTEM ONLINE...</div>
+        </div>
     </main>
 
-    <div class="footer-alert" id="sys-alert">STABLE</div>
+    <div id="flash-overlay"></div>
 
-    <!-- APP LOGIC -->
     <script type="module">
-        import HyperEngine from './js/HyperEngine.js';
-
-        // 1. Init Graphics
-        window.engine = new HyperEngine('hyper-canvas');
-
-        // 2. Global Tab Switcher
-        window.openTab = (tabName) => {
-            // UI Toggle
-            document.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.remove('active');
-                el.style.opacity = 0; 
-                el.style.display = 'none';
-            });
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-            // Show New Tab (with Anime.js fade)
-            const target = document.getElementById(tabName);
-            target.style.display = 'block';
-            
-            // Activate button
-            const clickedBtn = [...document.querySelectorAll('.tab-btn')]
-                .find(btn => btn.getAttribute('onclick').includes(tabName));
-            if(clickedBtn) clickedBtn.classList.add('active');
-
-            // Animation
-            anime({
-                targets: target,
-                opacity: [0, 1],
-                translateY: [20, 0],
-                duration: 400,
-                easing: 'easeOutExpo'
-            });
-        };
-
-        // 3. Sliders Logic
-        const rangeA = document.getElementById('rangeA');
-        const rangeB = document.getElementById('rangeB');
+        import SingularityEngine from './js/SingularityEngine.js';
         
-        const updateSliders = () => {
-            document.getElementById('dispA').innerText = rangeA.value;
-            document.getElementById('dispB').innerText = rangeB.value;
-            document.getElementById('barA').style.width = rangeA.value + "%";
-            document.getElementById('barB').style.width = rangeB.value + "%";
+        window.eng = new SingularityEngine('hyper-canvas');
+
+        // LOGIC
+        window.tab = (id) => {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
         }
-        rangeA.addEventListener('input', updateSliders);
-        rangeB.addEventListener('input', updateSliders);
-        updateSliders(); // Init
 
-        // 4. Recipe Loader Helper
-        window.loadRecipe = (a, mA, b, mB) => {
-            // Switch to reactor
-            openTab('reactor');
-            
-            // Set Values
-            document.getElementById('selA').value = a;
-            rangeA.value = mA;
-            document.getElementById('selB').value = b;
-            rangeB.value = mB;
-            
-            updateSliders();
+        window.run = (a, b) => {
+            document.getElementById('A').value = a;
+            document.getElementById('B').value = b;
+            fire();
+        }
 
-            // Auto-fire after delay
-            setTimeout(() => document.getElementById('ignite-btn').click(), 500);
+        window.fire = async () => {
+            const btn = document.querySelector('.fire-btn');
+            anime({ targets: btn, scale: [0.95, 1], duration: 100 });
+
+            const A = document.getElementById('A').value;
+            const mA = document.getElementById('mA').value;
+            const B = document.getElementById('B').value;
+            const mB = document.getElementById('mB').value;
+
+            const log = document.getElementById('logs');
+            log.innerHTML = `>> MIXING ${A} + ${B}...`;
+
+            const req = await fetch('/api/mix', {
+                method:'POST', 
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({idA: A, massA: mA, idB: B, massB: mB})
+            });
+            const res = await req.json();
+
+            // SEND TO ENGINE
+            window.eng.process(res);
+
+            log.innerHTML = `>> RESULT: ${res.reaction.event} <br> >> FORCE: ${res.reaction.force}N`;
+            
+            if(res.reaction.invert) {
+                log.style.color = "red";
+                log.innerHTML += " [CRITICAL WARNING]";
+            } else {
+                log.style.color = "#00E5FF";
+            }
         };
 
-        // 5. Ignition Sequence (API Call)
-        document.getElementById('ignite-btn').addEventListener('click', async () => {
-            const btn = document.getElementById('ignite-btn');
-            const log = document.getElementById('log-feed');
-
-            // Button Anim
-            anime({ targets: btn, scale: [0.95, 1], duration: 100 });
-            
-            log.innerHTML += `<div>> UPLOADING STOICHIOMETRY DATA...</div>`;
-            log.scrollTop = log.scrollHeight;
-
-            try {
-                const req = await fetch('/api/mix', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        idA: document.getElementById('selA').value,
-                        massA: rangeA.value,
-                        idB: document.getElementById('selB').value,
-                        massB: rangeB.value
-                    })
-                });
-
-                const data = await req.json();
-                
-                // SEND TO GPU
-                window.engine.process(data);
-
-                // UI UPDATES
-                const evt = data.meta.event;
-                log.innerHTML += `<div style="color:${data.physics.invert ? '#f00' : '#0f0'}">> OUTCOME: ${evt}</div>`;
-                log.innerHTML += `<div>> RADS: ${data.physics.radiation} | VISC: ${data.physics.viscosity.toFixed(2)}</div>`;
-                
-                // Sys Alert Footer
-                const alertBox = document.getElementById('sys-alert');
-                alertBox.innerText = evt;
-                if(data.physics.chaos > 50) {
-                    alertBox.className = "footer-alert critical";
-                } else {
-                    alertBox.className = "footer-alert";
-                }
-
-                // Reality Check (HTML Class)
-                if(data.physics.invert) {
-                    document.body.classList.add('reality-break');
-                    // Add shake to terminal
-                    anime({
-                        targets: '.terminal-container',
-                        translateX: [0, 5, -5, 0],
-                        translateY: [0, 5, -5, 0],
-                        duration: 300,
-                        easing: 'linear'
-                    });
-                } else {
-                    document.body.classList.remove('reality-break');
-                }
-
-            } catch(e) {
-                console.error(e);
-                log.innerHTML += `<div style="color:red">> CONNECTION ERROR</div>`;
-            }
-
-            log.scrollTop = log.scrollHeight;
+        // Pointer follow
+        document.addEventListener('mousemove', (e) => {
+            const el = document.getElementById('pointer-hint');
+            el.style.top = (e.clientY + 20) + 'px';
+            el.style.left = (e.clientX + 20) + 'px';
         });
-
     </script>
 </body>
 </html>

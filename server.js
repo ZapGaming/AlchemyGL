@@ -1,95 +1,112 @@
+/* server.js - ENTROPY ENGINE LOGIC CORE */
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const compression = require('compression');
 const Color = require('color');
 const path = require('path');
-
 const app = express();
+
 app.use(cors());
-app.use(compression());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- 50+ ELEMENT DATABASE ---
-// Types: 0=Fluid, 1=Plasma/Energy, 2=Solid/Sludge, 3=Eldritch/Glitch
+// --- THE GRAND ARCHIVE (70+ Elements) ---
 const DB = {
-    // --- TIER 1: BASIC FLUIDS (Mode 0) ---
-    'H2O': { name: 'Distilled Water', color: '#00BFFF', visc: 1.0, type: 0 },
-    'SEA': { name: 'Saltwater', color: '#006994', visc: 1.2, type: 0 },
-    'OIL': { name: 'Heavy Crude', color: '#1a1a1a', visc: 4.0, type: 0 },
-    'BLOOD': { name: 'Biological Matter', color: '#8a0303', visc: 2.0, type: 0 },
-    'MERC': { name: 'Mercury', color: '#C0C0C0', visc: 3.0, type: 0 },
-
-    // --- TIER 2: VOLATILE ENERGY (Mode 1) ---
-    'CH4': { name: 'Methane Ignited', color: '#00E5FF', visc: 0.1, type: 1 },
-    'NAPALM': { name: 'Napalm B', color: '#FF4500', visc: 2.5, type: 1, heat: 2000 },
-    'LAVA': { name: 'Magma', color: '#FF1744', visc: 8.0, type: 0, heat: 1500 },
-    'ACID': { name: 'Fluoroantimonic Acid', color: '#ccff00', visc: 1.5, type: 0 },
-    'ELEC': { name: 'Arc Lightning', color: '#E040FB', visc: 0.0, type: 1 },
-
-    // --- TIER 3: RADIOACTIVE / TOXIC (Mode 3 Glitch) ---
-    'U235': { name: 'Uranium 235', color: '#39FF14', visc: 5.0, type: 3, rads: 5 },
-    'CS137': { name: 'Cesium Dust', color: '#00bcd4', visc: 0.2, type: 3, rads: 8 },
-    'PLUT': { name: 'Plutonium Plasma', color: '#F50057', visc: 0.1, type: 3, rads: 10 },
+    // TIER 1: EARTHLY
+    'H2O': { name: 'Water', h: 0.1, v: 0.5, r: 0.0, color: '#2196F3', type: 'LIQ' },
+    'DIRT': { name: 'Earth/Soil', h: 0.0, v: 5.0, r: 0.0, color: '#5D4037', type: 'SOL' },
+    'SAND': { name: 'Silica Sand', h: 0.1, v: 4.5, r: 0.0, color: '#FFECB3', type: 'SOL' },
+    'OIL': { name: 'Crude Oil', h: 0.4, v: 2.0, r: 0.0, color: '#0D0D0D', type: 'LIQ' },
+    'GOLD': { name: 'Molten Gold', h: 0.6, v: 3.0, r: 0.0, color: '#FFD700', type: 'MET' },
+    'MERC': { name: 'Mercury', h: 0.2, v: 1.5, r: 0.1, color: '#CFD8DC', type: 'MET' },
     
-    // --- TIER 4: COSMIC / MYTHIC (Mode 2 Gyroid) ---
-    'VOID': { name: 'Vacuum Decay', color: '#000000', visc: 0.0, type: 2 },
-    'AETHER': { name: 'Celestial Aether', color: '#7C4DFF', visc: 0.5, type: 2 },
-    'N_STAR': { name: 'Neutron Star Core', color: '#FFFFFF', visc: 10.0, type: 1 },
-    'DARK': { name: 'Dark Matter', color: '#120024', visc: 1.0, type: 2 }
+    // TIER 2: VOLATILE
+    'FIRE': { name: 'Liquid Fire', h: 3.0, v: 0.1, r: 0.0, color: '#FF3D00', type: 'PLASMA' },
+    'LAVA': { name: 'Magma', h: 5.0, v: 8.0, r: 0.2, color: '#BF360C', type: 'LIQ' },
+    'NITRO':{ name: 'Nitroglycerin', h: 4.0, v: 0.8, r: 0.0, color: '#FFF9C4', type: 'EXP' },
+    'CH4':  { name: 'Methane', h: 2.5, v: 0.05, r: 0.0, color: '#00E5FF', type: 'GAS' },
+    'ACID': { name: 'Fluoroantimonic Acid', h: 2.0, v: 1.2, r: 0.5, color: '#76FF03', type: 'ACID' },
+
+    // TIER 3: COSMIC / SCI-FI
+    'U235': { name: 'Uranium 235', h: 6.0, v: 5.0, r: 8.0, color: '#69F0AE', type: 'RAD' },
+    'COR':  { name: 'Demon Core', h: 8.0, v: 9.0, r: 20.0, color: '#00C853', type: 'RAD' },
+    'VOID': { name: 'Void Essence', h: -10.0, v: 0.0, r: 50.0, color: '#000000', type: 'EXO' },
+    'ANTI': { name: 'Antimatter', h: 99.0, v: 0.0, r: 99.0, color: '#FFFFFF', type: 'EXO' },
+    'STR':  { name: 'Stardust', h: 10.0, v: 0.2, r: 5.0, color: '#E040FB', type: 'PLASMA' }
 };
 
 // --- PHYSICS ENGINE ---
-app.post('/api/simulate', (req, res) => {
+app.post('/api/mix', (req, res) => {
     try {
-        const { A, B } = req.body;
-        const matA = DB[A] || DB['H2O'];
-        const matB = DB[B] || DB['H2O'];
-
-        // Physics Mixing
-        let mixColor = Color(matA.color).mix(Color(matB.color), 0.5).hex();
-        let mixVisc = (matA.visc + matB.visc) / 2;
-        let mixType = Math.max(matA.type, matB.type); // Complex types override simple ones
-        let rads = (matA.rads || 0) + (matB.rads || 0);
-        let heat = (matA.heat || 20) + (matB.heat || 20);
-
-        // --- REACTION OVERRIDES (Chemistry Logic) ---
-        let alert = null;
+        const { idA, massA, idB, massB } = req.body;
         
-        // Matter + AntiMatter (Void)
-        if (A === 'VOID' || B === 'VOID') {
-            mixColor = '#000000';
-            mixType = 2; // Gyroid Mode
-            alert = "REALITY_COLLAPSE";
+        const mA = parseFloat(massA);
+        const mB = parseFloat(massB);
+        const totalMass = mA + mB;
+
+        // Ratio Weights
+        const rA = mA / totalMass;
+        const rB = mB / totalMass;
+
+        const elA = DB[idA] || DB['H2O'];
+        const elB = DB[idB] || DB['H2O'];
+
+        // 1. CALCULATE WEIGHTED PROPERTIES
+        let heat = (elA.h * rA) + (elB.h * rB);
+        let visc = (elA.v * rA) + (elB.v * rB);
+        let rads = (elA.r * rA) + (elB.r * rB); // Radiation averages out usually
+        let colA = Color(elA.color);
+        let colB = Color(elB.color);
+        let finalColor = colA.mix(colB, rB).hex();
+
+        // 2. CHEMICAL EVENTS SYSTEM
+        let event = "STABLE";
+        let chaosLevel = 0; // 0-100 scales graphics
+        let siteInvert = false;
+
+        // EVENT: Water Extinguishes Fire/Lava
+        if ((idA === 'H2O' && ['LAVA', 'FIRE'].includes(idB)) || (idB === 'H2O' && ['LAVA', 'FIRE'].includes(idA))) {
+             if (rA > 0.6 || rB > 0.6) {
+                event = "OBSIDIAN COOLING";
+                heat = 1.0; visc = 10.0; finalColor = '#212121';
+             } else {
+                event = "STEAM EXPLOSION";
+                heat = 15.0; visc = 0.0; chaosLevel = 20; finalColor = '#ECEFF1';
+             }
         }
 
-        // Alkali Explosion
-        if (['H2O', 'SEA', 'BLOOD'].includes(A) && ['NA', 'K'].includes(B)) {
-             mixType = 1; // Plasma mode
-             mixColor = '#FFEB3B';
-             mixVisc = 0.1;
-             alert = "THERMAL_DETONATION";
+        // EVENT: Matter-Antimatter Annihilation
+        if (idA === 'ANTI' || idB === 'ANTI') {
+             event = "VACUUM COLLAPSE";
+             heat = 1000.0; 
+             chaosLevel = 100;
+             rads = 100;
+             siteInvert = true; // TRIGGERS HTML COLOR SWAP
+             finalColor = '#FFFFFF';
         }
 
-        // Radiation Critical Mass
-        if (rads > 8) {
-            mixType = 3; // Glitch Mode
-            alert = "CRITICAL_IRRADIATION";
+        // EVENT: Nuclear Meltdown
+        if (rads > 8.0 && heat > 5.0) {
+            event = "CRITICAL EXCURSION";
+            chaosLevel = rads * 2;
+            finalColor = '#00FF00'; // Matrix Green
+            if (rads > 15) siteInvert = Math.random() > 0.5; // Flicker
         }
 
         res.json({
-            visual: {
-                color: mixColor,
-                viscosity: mixVisc,
-                mode: mixType,  // 0=Fluid, 1=Plasma, 2=Void, 3=Glitch
-                speed: 1.0 + (heat/1000),
-                bloom: heat > 1000 ? 3.0 : 1.5
-            },
-            meta: { name: `${matA.name} + ${matB.name}`, alert }
+            meta: { event },
+            physics: {
+                color: finalColor,
+                heat: heat,              // Controls Bloom + Turbulence Speed
+                viscosity: visc,         // Controls Fluid noise scale
+                radiation: rads,         // Controls Chromatic Aberration / Glitch
+                chaos: chaosLevel,       // Controls Screen Shake amount
+                invert: siteInvert       // Controls CSS Inversion
+            }
         });
-    } catch(e) { res.status(500).json({error:e}); }
+
+    } catch(e) { console.log(e); res.status(500).json({}); }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Alchemy Engine v4 Online on port ${PORT}`));
+app.listen(PORT, () => console.log(`ENTROPY V5 LISTENING ${PORT}`));

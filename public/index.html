@@ -2,165 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALCHEMYGL | Render Cloud Engine</title>
+    <title>ALCHEMY V4 | MAGNUM OPUS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <!-- THREE JS IMPORT -->
     <script type="importmap">
-        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
     </script>
 </head>
 <body>
 
-    <!-- VISUAL ENGINE (Background) -->
-    <div id="alchemy-viewport"></div>
+    <!-- 1. RENDER ENGINE -->
+    <div id="viewport"></div>
 
-    <div id="app-container">
+    <!-- 2. UI OVERLAY -->
+    <div class="cyber-ui">
         
         <!-- SIDEBAR -->
-        <aside class="glass-panel">
-            <div class="brand">ALCHEMY<span>GL</span></div>
+        <aside class="panel-left" id="sidebar">
+            <div class="brand">ALCHEMY_V4</div>
+            <p style="font-size:0.8rem; color:#aaa">GPU-Accelerated Matter Simulation API.<br>Host: Render.com<br>Status: ONLINE</p>
             
-            <nav class="nav-tabs">
-                <button class="active" onclick="switchTab('dashboard')">Experiment Console</button>
-                <button onclick="switchTab('docs')">Documentation & API</button>
-                <button onclick="switchTab('elements')">Element Database</button>
-            </nav>
+            <h3>CONTROLS</h3>
+            <div class="reactor-grid">
+                <button onclick="sim('H2O','SEA')">Oceanic (Fluid)</button>
+                <button onclick="sim('CH4','ELEC')">Ion Storm (Plasma)</button>
+                <button onclick="sim('VOID','DARK')">Dark Matter (Gyroid)</button>
+                <button onclick="sim('U235','PLUT')">Chernobyl (Glitch)</button>
+            </div>
 
-            <div class="hud-monitor">
-                <div class="stat-row"><span>TEMP</span> <span id="mon-temp">293 K</span></div>
-                <div class="stat-row"><span>VISCOSITY</span> <span id="mon-visc">1.00</span></div>
-                <div class="stat-row"><span>RADIATION</span> <span id="mon-rad">0.0 mSv</span></div>
-                <div class="status-msg" id="mon-event">SYSTEM STANDBY</div>
+            <div class="code-block" id="doc-code">
+// IMPORT
+import Alchemy from 'https://alchemygl.onrender.com/js/EngineV4.js';
+
+// INIT
+const eng = new Alchemy('my-div');
+
+// SIMULATE
+await fetch('/api/simulate', {
+ body: JSON.stringify({ A: 'VOID', B: 'DARK' })
+});
             </div>
         </aside>
 
-        <!-- MAIN CONTENT GLASS -->
-        <main class="glass-panel">
-            
-            <!-- TAB 1: DASHBOARD -->
-            <div id="dashboard" class="doc-section visible">
-                <h1>Chemical Console</h1>
-                <p>Select compounds to inject into the Reactor Core. Warning: High volatility reactions may cause browser vibration.</p>
-                
-                <div class="grid-controls">
-                    <div class="tier-label">/// TIER 1: LIQUIDS</div>
-                    <button class="chem-btn" onclick="inject('H2O','NA')">Water + Sodium (Boom)</button>
-                    <button class="chem-btn" onclick="inject('H2SO4','NAOH')">Acid + Base (Foam)</button>
+        <!-- FLOATING NOTIFICATIONS -->
+        <div class="panel-right">
+            <h1 id="reaction-name" style="opacity:0">SYSTEM READY</h1>
+        </div>
 
-                    <div class="tier-label">/// TIER 2: VOLATILES</div>
-                    <button class="chem-btn" onclick="inject('CH4','H2')">Methane + Hydrogen (Blue Plasma)</button>
-                    <button class="chem-btn" onclick="inject('NPLM','BLK')">Napalm + Gunpowder (Inferno)</button>
-
-                    <div class="tier-label">/// TIER 3: RADIOACTIVE / EXOTIC</div>
-                    <button class="chem-btn" onclick="inject('PU239','U235')">Demon Core Mix (Meltdown)</button>
-                    <button class="chem-btn" onclick="inject('VOID','SOL')">Dark Matter + Solar (Reality Fail)</button>
-                </div>
-                
-                <p style="margin-top: 30px; opacity: 0.6; font-size: 12px;">Running on Client GPU • Physics calculated on AlchemyGL Render Server</p>
-            </div>
-
-            <!-- TAB 2: DOCUMENTATION -->
-            <div id="docs" class="doc-section">
-                <h1>API Integration</h1>
-                <p>AlchemyGL is designed as a headless Render Service.</p>
-                
-                <h3>Endoint</h3>
-                <code>POST https://alchemygl.onrender.com/api/react</code>
-
-                <h3>Quick Start Code</h3>
-                <code id="codeblock">
-import AlchemyEngine from 'https://alchemygl.onrender.com/js/AlchemyGL.js';
-
-// 1. Initialize Canvas
-const engine = new AlchemyEngine('my-div-id');
-
-// 2. Request Physics Data
-const res = await fetch('https://alchemygl.onrender.com/api/react', {
-    method: 'POST',
-    body: JSON.stringify({ 
-        idA: 'VOID', amountA: 50, 
-        idB: 'SOL', amountB: 50 
-    }),
-    headers: { 'Content-Type': 'application/json' }
-});
-
-// 3. Update Visuals
-const data = await res.json();
-engine.visualize(data.reaction);
-                </code>
-            </div>
-
-            <!-- TAB 3: ELEMENT DB -->
-            <div id="elements" class="doc-section">
-                <h1>Element Database (v3)</h1>
-                <div id="element-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">
-                    <!-- Filled by JS -->
-                </div>
-            </div>
-
-        </main>
     </div>
+
+    <!-- CRITICAL ALERT OVERLAY -->
+    <div id="sys-alert">CRITICAL ERROR</div>
 
     <!-- LOGIC -->
     <script type="module">
-        import AlchemyGL from './js/AlchemyGL.js';
-        
-        // 1. Init Engine
-        window.engine = new AlchemyGL('alchemy-viewport');
+        import AlchemyCore from './js/EngineV4.js';
 
-        // 2. Global Inject Function
-        window.inject = async (a, b) => {
-            document.getElementById('mon-event').innerHTML = "CALCULATING PHYSICS...";
-            document.getElementById('mon-event').style.color = "#fff";
+        // 1. Start Engine
+        window.engine = new AlchemyCore('viewport');
 
-            // Add Click animation
-            anime({ targets: '#app-container', scale: [1, 0.99, 1], duration: 300 });
-
-            try {
-                const req = await fetch('/api/react', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ idA: a, amountA: 50, idB: b, amountB: 50 })
-                });
-                const data = await req.json();
-
-                if(data.success) {
-                    window.engine.visualize(data.reaction);
-                    
-                    // Update HUD with Anime.js numbers
-                    anime({ targets: '#mon-temp', innerHTML: [0, data.reaction.temp], round: 1, label: ' K' });
-                    document.getElementById('mon-rad').innerText = data.reaction.radiation.toFixed(1) + " mSv";
-                    document.getElementById('mon-visc').innerText = data.reaction.viscosity.toFixed(2);
-                    
-                    const eventLabel = document.getElementById('mon-event');
-                    eventLabel.innerText = data.reaction.event;
-                    
-                    if(data.reaction.shake > 2.0) eventLabel.style.color = '#ff3333';
-                    else eventLabel.style.color = '#00e0ff';
-                }
-            } catch(e) { console.error(e); }
+        // 2. Intro Animation
+        window.onload = () => {
+            anime({
+                targets: '#sidebar',
+                translateX: ['-100%', '0%'],
+                opacity: [0, 1],
+                duration: 1000,
+                easing: 'easeOutExpo'
+            });
         };
 
-        // 3. Tab Switcher
-        window.switchTab = (tabId) => {
-            document.querySelectorAll('.doc-section').forEach(d => d.classList.remove('visible'));
-            document.getElementById(tabId).classList.add('visible');
-            
-            document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-        }
+        // 3. Simulation Logic
+        window.sim = async (elA, elB) => {
+            // UI Feedback
+            document.getElementById('reaction-name').style.opacity = 0;
+            anime({ targets: '.panel-left', translateX: -10, direction: 'alternate', duration: 100 });
 
-        // 4. Fill DB List
-        const commonElements = [
-            'H2O', 'LN2', 'CH4', 'NPLM', 'H2', 'U235', 'PU239', 'VOID', 'SOL'
-        ];
-        const dbDiv = document.getElementById('element-list');
-        commonElements.forEach(el => {
-            dbDiv.innerHTML += `<div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:5px; font-size:12px; font-family:'JetBrains Mono'">${el}</div>`
-        });
+            // Call Hivemind
+            try {
+                const req = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ A: elA, B: elB })
+                });
+                const res = await req.json();
 
+                // Send data to GPU
+                window.engine.react(res.visual);
+
+                // Update UI text
+                const label = document.getElementById('reaction-name');
+                label.innerText = res.meta.name;
+                anime({ targets: label, opacity: [0,1], duration: 1000 });
+
+                // Alert Check
+                const alert = document.getElementById('sys-alert');
+                if(res.meta.alert) {
+                    alert.innerText = res.meta.alert;
+                    alert.style.display = 'block';
+                    anime({ 
+                        targets: alert, 
+                        scale: [0.8, 1.2], 
+                        opacity: [0, 1, 0], 
+                        duration: 2000, 
+                        loop: 2 
+                    });
+                } else {
+                    alert.style.display = 'none';
+                }
+
+            } catch(e) { console.error(e); }
+        };
     </script>
+
 </body>
 </html>

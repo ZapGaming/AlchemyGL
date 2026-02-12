@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER CORE | GPU Chemical Engine</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+</head>
+<body>
+    
+    <!-- GRAPHICS LAYER -->
+    <div id="render-layer"></div>
+
+    <!-- UI LAYER -->
+    <main>
+        <!-- NAV / HEADER -->
+        <header>
+            <div class="logo">AETHER<span>CORE</span></div>
+            <div class="status-indicator">SYSTEM ONLINE</div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- SIDEBAR DOCS -->
+            <nav class="sidebar">
+                <h3>Documentation</h3>
+                <ul>
+                    <li class="active" data-tab="intro">01. Introduction</li>
+                    <li data-tab="setup">02. Setup & Install</li>
+                    <li data-tab="api">03. Reaction API</li>
+                    <li data-tab="library">04. Element Library</li>
+                </ul>
+                
+                <h3>Live Simulation</h3>
+                <div class="sim-controls">
+                    <button class="action-btn" onclick="sim('H2O','NA')">💥 Explode (Water+Na)</button>
+                    <button class="action-btn" onclick="sim('CH4','NAPALM')">🔥 Blue Fire (Meth+Fuel)</button>
+                    <button class="action-btn" onclick="sim('U235','Pu')">☢️ Meltdown (Radioactive)</button>
+                    <button class="action-btn outline" onclick="sim('H2O','XEN')">🧊 Cool Down</button>
+                </div>
+                <div id="physics-monitor">
+                    <div>TEMP: <span id="val-temp">0</span> K</div>
+                    <div>RADS: <span id="val-rad">0</span> Gy</div>
+                    <div>VISC: <span id="val-visc">0</span> P</div>
+                    <div>STATUS: <span id="val-stat">STANDBY</span></div>
+                </div>
+            </nav>
+
+            <!-- CONTENT AREA -->
+            <div class="page-content">
+                
+                <div id="intro" class="section">
+                    <h1>GPU Chemical Reaction Engine</h1>
+                    <p>A high-performance physics simulation that runs the thermodynamics logic on a Neural Backend (Hivemind) and renders 60FPS fluid dynamics on the client GPU.</p>
+                    <div class="highlight-box">
+                        Full physics support: Advection, Diffusion, Combustion, and Radiant Distortion.
+                    </div>
+                </div>
+
+                <div id="setup" class="section hidden">
+                    <h1>Integration Guide</h1>
+                    <p>To use this engine in your own site:</p>
+                    <code>
+&lt;script type="module"&gt;
+  import AetherEngine from 'https://your-url.onrender.com/js/AetherEngine.js';
+  const engine = new AetherEngine('container-id');
+  
+  // Call the Backend API
+  fetch('https://your-url.onrender.com/api/react', {...})
+    .then(res => res.json())
+    .then(data => engine.update(data.reaction));
+&lt;/script&gt;
+                    </code>
+                </div>
+
+                <div id="api" class="section hidden">
+                    <h1>API Reference</h1>
+                    <p>Endpoint: <span class="method">POST</span> <code>/api/react</code></p>
+                    <pre>
+{
+  "idA": "CH4",     // Element ID 1
+  "amountA": 50,    // Mass Int
+  "idB": "NA",      // Element ID 2
+  "amountB": 20     // Mass Int
+}
+                    </pre>
+                </div>
+
+                <div id="library" class="section hidden">
+                    <h1>Chemical Registry</h1>
+                    <table>
+                        <thead><tr><th>ID</th><th>Name</th><th>Props</th></tr></thead>
+                        <tbody>
+                            <tr><td>CH4</td><td>Methane</td><td>Volatile Gas, Blue Flame</td></tr>
+                            <tr><td>U235</td><td>Uranium</td><td>High Radiation, Green Glitch</td></tr>
+                            <tr><td>NA</td><td>Sodium</td><td>Explosive with Water</td></tr>
+                            <tr><td>NAPALM</td><td>Napalm</td><td>High Viscosity, Orange Flame</td></tr>
+                            <tr><td>XEN</td><td>Xenon</td><td>Noble Gas, Cooling Agent</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="js/app.js"></script>
+    <script type="module">
+        import AetherEngine from './js/AetherEngine.js';
+        
+        // GLOBAL ENGINE INIT
+        window.engine = new AetherEngine('render-layer');
+        
+        window.sim = async (a, b) => {
+            document.getElementById('val-stat').innerHTML = "COMPUTING...";
+            
+            // ANIME.JS Button effect
+            anime({
+                targets: '.sim-controls button',
+                scale: [1, 0.95, 1],
+                duration: 200,
+                easing: 'easeInOutQuad'
+            });
+
+            // HIT BACKEND
+            const res = await fetch('/api/react', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({idA: a, amountA: 50, idB: b, amountB: 50})
+            });
+            const data = await res.json();
+            
+            if(data.reaction) {
+                // UPDATE ENGINE
+                window.engine.update(data.reaction);
+                
+                // UPDATE MONITOR UI
+                anime({ targets: '#val-temp', innerHTML: [0, Math.floor(data.reaction.temp)], round: 1 });
+                anime({ targets: '#val-rad', innerHTML: [0, data.reaction.radiation.toFixed(2)], round: 100 });
+                anime({ targets: '#val-visc', innerHTML: [0, data.reaction.viscosity.toFixed(1)], round: 10 });
+                document.getElementById('val-stat').innerHTML = data.reaction.event;
+                
+                // Colorize Status
+                let color = '#fff';
+                if(data.reaction.event === 'EXPLOSION') color = '#ff0000';
+                if(data.reaction.event === 'IGNITION') color = '#00B0FF';
+                document.getElementById('val-stat').style.color = color;
+            }
+        }
+    </script>
+</body>
+</html>

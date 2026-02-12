@@ -2,158 +2,131 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ENTROPY V6 | THE SINGULARITY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISOTOPE | Virtual Chemistry Lab</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
     <script type="importmap">
     { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
     </script>
 </head>
 <body>
 
-    <div id="hyper-canvas"></div>
-    
-    <!-- MOUSE INTERACTION HINT -->
-    <div id="pointer-hint">MOUSE ACTIVE</div>
+    <!-- LAYER 1: 3D VIEWPORT -->
+    <div id="isotope-viewport"></div>
 
-    <main class="holo-ui">
-        <div class="header">
-            <div class="title">ENTROPY<span>V6.0</span></div>
-            <div class="status">ENGINE: HYBRID (WebGL+PhysX)</div>
+    <!-- LAYER 2: INTERFACE -->
+    <main class="lab-container">
+        
+        <header>
+            <div class="lab-brand">ISOTOPE<div class="sup">EDU</div></div>
+            <div class="subtitle">Volumetric Simulation Environment v7</div>
+        </header>
+
+        <div class="grid-layout">
+            
+            <!-- CONTROLS -->
+            <section class="panel control-panel">
+                <h3>REAGENTS SHELF</h3>
+                <div class="reagent-grid">
+                    <button class="beaker blue" onclick="setR('H2O2', 'Hydrogen Peroxide')">H₂O₂</button>
+                    <button class="beaker yellow" onclick="setR('KI', 'Potassium Iodide')">KI</button>
+                    <button class="beaker white" onclick="setR('PB', 'Lead Nitrate')">Pb(NO₃)₂</button>
+                    <button class="beaker purple" onclick="setR('C8H7N3O2', 'Luminol')">Luminol</button>
+                    <button class="beaker osc" onclick="setR('OSC', 'Iodine Oscillator')">Briggs Cycle</button>
+                    <button class="beaker clear" onclick="clearLab()">Water (H₂O)</button>
+                </div>
+
+                <div class="mixer-slot">
+                    <div class="slot" id="slot1">Empty</div>
+                    <div class="plus">+</div>
+                    <div class="slot" id="slot2">Empty</div>
+                </div>
+
+                <button class="react-btn" onclick="react()">TITRATE / REACT</button>
+            </section>
+
+            <!-- NOTEBOOK / OUTPUT -->
+            <section class="panel notebook">
+                <h3>LABORATORY NOTES</h3>
+                
+                <div class="data-row">
+                    <span class="label">REACTION:</span>
+                    <span class="value title" id="res-name">--</span>
+                </div>
+                
+                <div class="equation-box" id="res-eq">
+                    A + B → AB
+                </div>
+
+                <div class="data-row">
+                    <span class="label">ENTHALPY (ΔH):</span>
+                    <span class="value" id="res-ent">--</span>
+                </div>
+
+                <div class="desc-box">
+                    Observation log: Select two reagents from the left to simulate Volumetric Thermodynamics. Real-time Beer's law rendering active.
+                </div>
+            </section>
         </div>
-
-        <div class="viewport-hud">
-            <!-- TAB NAV -->
-            <div class="tabs">
-                <button class="active" onclick="tab('MANUAL')">MANUAL CONTROL</button>
-                <button onclick="tab('PRESETS')">CATASTROPHES</button>
-                <button onclick="tab('GUIDE')">FIELD GUIDE</button>
-            </div>
-
-            <!-- TAB: MANUAL -->
-            <div id="MANUAL" class="panel active">
-                <div class="row">
-                    <div class="col">
-                        <label>SOURCE A (Base)</label>
-                        <select id="A">
-                            <option value="H2O">Water</option>
-                            <option value="DIRT">Soil</option>
-                            <option value="CH4">Methane</option>
-                            <option value="VOID">Dark Energy</option>
-                            <option value="ANTI">Antimatter</option>
-                        </select>
-                        <input type="range" id="mA" value="50">
-                    </div>
-                    <div class="col">
-                        <label>SOURCE B (Catalyst)</label>
-                        <select id="B">
-                            <option value="FIRE">Plasma Fire</option>
-                            <option value="NITRO">Explosive (C4)</option>
-                            <option value="U235">Uranium Core</option>
-                            <option value="GRAV">Singularity</option>
-                            <option value="O2">Liquid Oxygen</option>
-                        </select>
-                        <input type="range" id="mB" value="50">
-                    </div>
-                </div>
-                <button class="fire-btn" onclick="fire()">IGNITE SEQUENCE</button>
-            </div>
-
-            <!-- TAB: PRESETS -->
-            <div id="PRESETS" class="panel">
-                <div class="preset-grid">
-                    <div class="card" onclick="run('ANTI','ANTI')">
-                        <b>MATTER DELETION</b>
-                        <small>Antimatter + Antimatter</small>
-                    </div>
-                    <div class="card" onclick="run('NITRO','FIRE')">
-                        <b>THERMAL DETONATION</b>
-                        <small>C4 + Plasma</small>
-                    </div>
-                    <div class="card" onclick="run('VOID','GRAV')">
-                        <b>BLACK HOLE</b>
-                        <small>Dark Energy + Singularity</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB: GUIDE -->
-            <div id="GUIDE" class="panel">
-                <h3>INTERACTIVITY UPGRADE</h3>
-                <ul>
-                    <li><b>Move Mouse:</b> Interacts with fluid tension locally.</li>
-                    <li><b>Explosions:</b> V6 includes physical shrapnel debris.</li>
-                    <li><b>Events:</b> Reactions now trigger HTML layout shakes.</li>
-                </ul>
-                <div class="guide-box">
-                    API: <code>POST /api/mix</code><br>
-                    Engine: Three.js + Custom Physics Shader
-                </div>
-            </div>
-
-            <div class="logs" id="logs">>> SYSTEM ONLINE...</div>
-        </div>
+        
     </main>
 
-    <div id="flash-overlay"></div>
-
     <script type="module">
-        import SingularityEngine from './js/SingularityEngine.js';
+        import IsotopeEngine from './js/IsotopeGraphics.js';
         
-        window.eng = new SingularityEngine('hyper-canvas');
+        // 1. Init
+        const engine = new IsotopeEngine('isotope-viewport');
+        
+        // State
+        window.state = { r1: null, r2: null, r1ID: null, r2ID: null };
 
-        // LOGIC
-        window.tab = (id) => {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-        }
-
-        window.run = (a, b) => {
-            document.getElementById('A').value = a;
-            document.getElementById('B').value = b;
-            fire();
-        }
-
-        window.fire = async () => {
-            const btn = document.querySelector('.fire-btn');
-            anime({ targets: btn, scale: [0.95, 1], duration: 100 });
-
-            const A = document.getElementById('A').value;
-            const mA = document.getElementById('mA').value;
-            const B = document.getElementById('B').value;
-            const mB = document.getElementById('mB').value;
-
-            const log = document.getElementById('logs');
-            log.innerHTML = `>> MIXING ${A} + ${B}...`;
-
-            const req = await fetch('/api/mix', {
-                method:'POST', 
-                headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({idA: A, massA: mA, idB: B, massB: mB})
-            });
-            const res = await req.json();
-
-            // SEND TO ENGINE
-            window.eng.process(res);
-
-            log.innerHTML = `>> RESULT: ${res.reaction.event} <br> >> FORCE: ${res.reaction.force}N`;
-            
-            if(res.reaction.invert) {
-                log.style.color = "red";
-                log.innerHTML += " [CRITICAL WARNING]";
+        window.setR = (id, name) => {
+            if(!window.state.r1ID) {
+                window.state.r1ID = id; window.state.r1 = name;
+                document.getElementById('slot1').innerText = id;
+                document.getElementById('slot1').classList.add('filled');
+            } else if(!window.state.r2ID) {
+                window.state.r2ID = id; window.state.r2 = name;
+                document.getElementById('slot2').innerText = id;
+                document.getElementById('slot2').classList.add('filled');
             } else {
-                log.style.color = "#00E5FF";
+                alert("Beakers full. Clear lab first.");
             }
         };
 
-        // Pointer follow
-        document.addEventListener('mousemove', (e) => {
-            const el = document.getElementById('pointer-hint');
-            el.style.top = (e.clientY + 20) + 'px';
-            el.style.left = (e.clientX + 20) + 'px';
-        });
+        window.clearLab = () => {
+            window.state = { r1: null, r2: null, r1ID: null, r2ID: null };
+            document.querySelectorAll('.slot').forEach(s => {
+                s.innerText = "Empty"; s.classList.remove('filled');
+            });
+            document.getElementById('res-eq').innerText = "System Reset";
+            engine.processReaction({ visuals: { baseColor: [0.8,0.9,1.0], secondaryColor:[0.8,0.9,1.0], type:'LIQUID' }});
+        }
+
+        window.react = async () => {
+            if(!window.state.r1ID) return;
+            
+            // Only one Reagent? assume water mix or self reaction handling
+            const A = window.state.r1ID;
+            const B = window.state.r2ID || 'H2O'; // Default water dilution
+
+            // Call Server Math
+            const req = await fetch('/api/analyze', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ reactantA: A, reactantB: B })
+            });
+            const data = await req.json();
+
+            // Update UI
+            document.getElementById('res-name').innerText = data.name;
+            document.getElementById('res-eq').innerText = data.equation;
+            document.getElementById('res-ent').innerText = data.enthalpy;
+
+            // Trigger Engine
+            engine.processReaction(data);
+        };
     </script>
 </body>
 </html>

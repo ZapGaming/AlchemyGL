@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ALCHEMY V4 | MAGNUM OPUS</title>
+    <title>ENTROPY V5 | Hyper-Engine</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <script type="importmap">
@@ -11,109 +11,125 @@
 </head>
 <body>
 
-    <!-- 1. RENDER ENGINE -->
-    <div id="viewport"></div>
+    <!-- 1. GRAPHICS LAYER -->
+    <div id="hyper-canvas"></div>
 
-    <!-- 2. UI OVERLAY -->
-    <div class="cyber-ui">
-        
-        <!-- SIDEBAR -->
-        <aside class="panel-left" id="sidebar">
-            <div class="brand">ALCHEMY_V4</div>
-            <p style="font-size:0.8rem; color:#aaa">GPU-Accelerated Matter Simulation API.<br>Host: Render.com<br>Status: ONLINE</p>
+    <!-- 2. UI LAYER -->
+    <div class="glass-container">
+        <header>
+            <div class="brand">ENTROPY<span>V5</span></div>
+            <div class="subtitle">RENDER COMPETITION BUILD</div>
+        </header>
+
+        <div class="controls-area">
             
-            <h3>CONTROLS</h3>
-            <div class="reactor-grid">
-                <button onclick="sim('H2O','SEA')">Oceanic (Fluid)</button>
-                <button onclick="sim('CH4','ELEC')">Ion Storm (Plasma)</button>
-                <button onclick="sim('VOID','DARK')">Dark Matter (Gyroid)</button>
-                <button onclick="sim('U235','PLUT')">Chernobyl (Glitch)</button>
+            <!-- CHAMBER A -->
+            <div class="chamber">
+                <div class="label">PRIMARY ELEMENT</div>
+                <select id="selA">
+                    <option value="H2O" selected>Water (H2O)</option>
+                    <option value="FIRE">Liquid Fire</option>
+                    <option value="U235">Uranium 235</option>
+                    <option value="VOID">Void Essence</option>
+                    <option value="GOLD">Molten Gold</option>
+                    <option value="ANTI">Antimatter</option>
+                </select>
+                <div class="mass-control">
+                    <label>MASS: <span id="valA">50</span>g</label>
+                    <input type="range" id="rangeA" min="1" max="100" value="50">
+                </div>
             </div>
 
-            <div class="code-block" id="doc-code">
-// IMPORT
-import Alchemy from 'https://alchemygl.onrender.com/js/EngineV4.js';
+            <div class="separator">+</div>
 
-// INIT
-const eng = new Alchemy('my-div');
-
-// SIMULATE
-await fetch('/api/simulate', {
- body: JSON.stringify({ A: 'VOID', B: 'DARK' })
-});
+            <!-- CHAMBER B -->
+            <div class="chamber">
+                <div class="label">SECONDARY ELEMENT</div>
+                <select id="selB">
+                    <option value="LAVA" selected>Magma</option>
+                    <option value="NITRO">Nitroglycerin</option>
+                    <option value="ACID">Super Acid</option>
+                    <option value="COR">Demon Core</option>
+                    <option value="STR">Stardust</option>
+                </select>
+                <div class="mass-control">
+                    <label>MASS: <span id="valB">50</span>g</label>
+                    <input type="range" id="rangeB" min="1" max="100" value="50">
+                </div>
             </div>
-        </aside>
-
-        <!-- FLOATING NOTIFICATIONS -->
-        <div class="panel-right">
-            <h1 id="reaction-name" style="opacity:0">SYSTEM READY</h1>
+            
         </div>
 
+        <!-- ACTIVATE -->
+        <button id="ignite">INITIATE REACTION</button>
+
+        <!-- DATA READOUT -->
+        <div class="console">
+            <div class="log-line">> SYSTEM READY...</div>
+            <div class="log-line" id="status-text" style="color:#00E5FF">WAITING FOR INPUT</div>
+        </div>
+
+        <!-- DOCS SECTION -->
+        <div class="docs-mini">
+            API ENDPOINT: <code>POST /api/mix</code><br>
+            <i>Try "Antimatter" + "Void" for Reality Collapse.</i>
+        </div>
     </div>
 
-    <!-- CRITICAL ALERT OVERLAY -->
-    <div id="sys-alert">CRITICAL ERROR</div>
-
-    <!-- LOGIC -->
     <script type="module">
-        import AlchemyCore from './js/EngineV4.js';
+        import HyperEngine from './js/HyperEngine.js';
+        
+        // 1. Start Graphics
+        window.engine = new HyperEngine('hyper-canvas');
 
-        // 1. Start Engine
-        window.engine = new AlchemyCore('viewport');
+        // 2. Input Handlers
+        const rA = document.getElementById('rangeA');
+        const rB = document.getElementById('rangeB');
+        
+        rA.oninput = () => document.getElementById('valA').innerText = rA.value;
+        rB.oninput = () => document.getElementById('valB').innerText = rB.value;
 
-        // 2. Intro Animation
-        window.onload = () => {
-            anime({
-                targets: '#sidebar',
-                translateX: ['-100%', '0%'],
-                opacity: [0, 1],
-                duration: 1000,
-                easing: 'easeOutExpo'
-            });
-        };
+        // 3. The Logic Connection
+        document.getElementById('ignite').onclick = async () => {
+            const btn = document.getElementById('ignite');
+            const log = document.getElementById('status-text');
+            
+            // Animation
+            anime({ targets: btn, scale: [0.95, 1], duration: 100 });
+            log.innerText = "CALCULATING PHYSICS...";
+            log.style.color = "#FFF";
 
-        // 3. Simulation Logic
-        window.sim = async (elA, elB) => {
-            // UI Feedback
-            document.getElementById('reaction-name').style.opacity = 0;
-            anime({ targets: '.panel-left', translateX: -10, direction: 'alternate', duration: 100 });
-
-            // Call Hivemind
             try {
-                const req = await fetch('/api/simulate', {
+                // Post Data to Render Backend
+                const req = await fetch('/api/mix', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ A: elA, B: elB })
+                    body: JSON.stringify({
+                        idA: document.getElementById('selA').value,
+                        massA: rA.value,
+                        idB: document.getElementById('selB').value,
+                        massB: rB.value
+                    })
                 });
-                const res = await req.json();
+                
+                const data = await req.json();
 
-                // Send data to GPU
-                window.engine.react(res.visual);
+                // Send to GPU
+                window.engine.process(data);
 
-                // Update UI text
-                const label = document.getElementById('reaction-name');
-                label.innerText = res.meta.name;
-                anime({ targets: label, opacity: [0,1], duration: 1000 });
-
-                // Alert Check
-                const alert = document.getElementById('sys-alert');
-                if(res.meta.alert) {
-                    alert.innerText = res.meta.alert;
-                    alert.style.display = 'block';
-                    anime({ 
-                        targets: alert, 
-                        scale: [0.8, 1.2], 
-                        opacity: [0, 1, 0], 
-                        duration: 2000, 
-                        loop: 2 
-                    });
+                // Update UI
+                log.innerText = "EVENT: " + data.meta.event;
+                
+                if (data.meta.event.includes('COLLAPSE') || data.meta.event.includes('CRITICAL')) {
+                    log.style.color = "#FF0055"; // Red Alert
                 } else {
-                    alert.style.display = 'none';
+                    log.style.color = "#00FFaa";
                 }
 
-            } catch(e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
         };
     </script>
-
 </body>
 </html>
